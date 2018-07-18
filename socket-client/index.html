@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Socket client</title>
+  <base href="/">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script src="/socket.io.js"></script>
+  <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+</head>
+<body>
+    <input id="userName" type="text"/><br>
+    <button id="register">Register</button><br><br>
+    <input id="chatText" type="text"/><br>
+    <input id="sendTo" type="text"/><br>
+    <button id="send">Send</button>
+    <ul id="chatMessagesList"></ul>
+
+  <script src="client.js"></script>
+</body>
+</html>
