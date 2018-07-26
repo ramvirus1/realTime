@@ -11,8 +11,8 @@ var clientsConnected = {};
 
 io.on("connection",function(socket){
    socket.on("join", function(name){
-        socket.emit("join",{name:name,id:socket.id});
         clientsConnected[name] = socket.id;
+        socket.emit("join",clientsConnected);
    });
    socket.on("message",function(msg){
         var message = msg;
