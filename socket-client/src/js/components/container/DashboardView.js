@@ -2,73 +2,117 @@ import React from "react";
 import Dashboard from "../presentational/Dashboard";
 import {withRouter} from 'react-router-dom';
 import SocketConn from '../../configuration/Socket.start';
+import {connect} from 'react-redux';
+import Actions from '../../configuration/Actions';
 
 class DashboardView extends React.Component{
    constructor(){
        super();
-       this.state = {
-            enteredMessage:"",
-            toUser:"",
-            chatErrorMsg:"",
-            chatErrorToastState:false,
-            incomingMsgModel:[],
-            joinedUsers:{},
-            loggedInUser:""
-       };
        this.SocketSwitch = new SocketConn();
-       this.onMessageEntry = this.onMessageEntry.bind(this);
-       this.onUserEntry = this.onUserEntry.bind(this);
-       this.onMessageSend = this.onMessageSend.bind(this);
-       this.onChatErrorToastClose = this.onChatErrorToastClose.bind(this);
        this.onMessageReceive = this.onMessageReceive.bind(this);
        this.onUserJoinEvent = this.onUserJoinEvent.bind(this);
    }
    componentDidMount(){ 
-        this.setState({loggedInUser:this.props.location.state.loggedInUser});  
         this.SocketSwitch.connect(this.onMessageReceive,this.onUserJoinEvent);
         this.SocketSwitch.sendJoinEvent(this.props.location.state.loggedInUser);
    }
 
    onMessageReceive(message){
-      this.state.incomingMsgModel.push(message);
-      this.setState({incomingMsgModel:this.state.incomingMsgModel});
+       this.props.updateMessageList(message);
    }
    onUserJoinEvent(users){
-      this.setState({joinedUsers:users});
+    this.props.updateOnlineUsers(users);
    }
    onMessageEntry(event){
-    this.setState({enteredMessage:event.target.value}); 
+    this.props.handleMessageChange(event.target.value);  
    }
    onUserEntry(event){
-    this.setState({toUser:event.target.value});    
+    this.props.onToUserSelection(event.target.value);
    }
    onChatErrorToastClose(){
-    this.setState({chatErrorToastState:false});
+    this.props.toggleErrorToast(false,'');
    }
    onMessageSend(event){
-       if(this.state.enteredMessage === ""){
-        this.setState({chatErrorToastState:true,chatErrorMsg:"Please Enter Message"});
-        return;
-       }else if(this.state.toUser === ""){
-        this.setState({chatErrorToastState:true,chatErrorMsg:"Please Enter Receiver Name"});
-        return;
-       }
-       this.SocketSwitch.sendMessage(this.state.loggedInUser,this.state.enteredMessage,this.state.toUser);
+       if(this.props.enteredMessage === ""){
+        this.props.toggleErrorToast(true,'Please Enter Message');
+       }else if(this.props.toUser === ""){
+        this.props.toggleErrorToast(true,'Please Enter Receiver Name');
+       }else{
+        this.SocketSwitch.sendMessage(this.props.loggedInUser,this.props.enteredMessage,this.props.toUser);
+       }   
    }
    render(){
        return(
-        <Dashboard message={this.state.enteredMessage} 
-            onMessageEntry={this.onMessageEntry}
-            onUserEntry={this.onUserEntry} 
-            toUser={this.state.toUser} 
-            incomingMsgModel={this.state.incomingMsgModel} 
-            onMessageSend={this.onMessageSend} 
-            chatErrorMsg={this.state.chatErrorMsg} 
-            chatErrorToastState={this.state.chatErrorToastState}
-            onChatErrorToastClose={this.onChatErrorToastClose}
-            joinedUsers={this.state.joinedUsers}
+        <Dashboard message={this.props.enteredMessage} 
+            onMessageEntry={this.onMessageEntry.bind(this)} 
+            onUserEntry={this.onUserEntry.bind(this)} 
+            toUser={this.props.toUser} 
+            incomingMsgModel={this.props.incomingMsgModel} 
+            onMessageSend={this.onMessageSend.bind(this)} 
+            chatErrorMsg={this.props.chatErrorMsg} 
+            chatErrorToastState={this.props.chatErrorToastState}
+            onChatErrorToastClose={this.onChatErrorToastClose.bind(this)}
+            joinedUsers={this.props.joinedUsers}
         />
        )
    }
 }
-export default withRouter(DashboardView);
+function mapStateToProps(state) {
+    return({
+        enteredMessage:state.DashboardReducer.enteredMessage,
+        toUser:state.DashboardReducer.toUser,
+        chatErrorMsg:state.DashboardReducer.chatErrorMsg,
+        chatErrorToastState:state.DashboardReducer.chatErrorToastState,
+        incomingMsgModel:state.DashboardReducer.incomingMsgModel,
+        joinedUsers:state.DashboardReducer.joinedUsers,
+        loggedInUser:state.DashboardReducer.loggedInUser
+    })
+}
+function mapDispatchToProps(dispatch) {
+    return({
+        updateCurrentUserName(name){
+            dispatch({type:Actions.Dashboard.UPDATE_CURRENT_LOGIN_NAME,
+                payload:{
+                    name:name
+                }
+            })
+        },
+        handleMessageChange(message){
+            dispatch({type:Actions.Dashboard.MESSAGE_ENTRY_CHANGE,
+                payload:{
+                    message:message
+                }
+            })
+        },
+        toggleErrorToast(state,errorMessage){
+            dispatch({type:Actions.Dashboard.TOGGLE_ERROR_TOAST,
+                payload:{
+                    state:state,
+                    message:errorMessage
+                }
+            })
+        },
+        onToUserSelection(toUser){
+            dispatch({type:Actions.Dashboard.UPDATE_TO_USER_SELECTION,
+                payload:{
+                  toUser:toUser
+                }
+            })
+        },
+        updateMessageList(messages){
+            dispatch({type:Actions.Dashboard.UPDATE_MESSAGES_LIST,
+                payload:{
+                   messages:messages
+                }
+            })
+        },
+        updateOnlineUsers(userList){
+            dispatch({type:Actions.Dashboard.UPDATE_ONLINE_USERS,
+                payload:{
+                    userlist:userList
+                }
+            })
+        }
+    })
+};
+export default connect(mapStateToProps,mapDispatchToProps)(DashboardView);
