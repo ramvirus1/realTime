@@ -11,19 +11,21 @@ var clientsConnected = {};
 
 io.on("connection",function(socket){
    socket.on("join", function(name){
-        clientsConnected[name] = socket.id;
-        socket.emit("join",clientsConnected);
+    clientsConnected[name] = socket.id;
+    socket.emit("join",clientsConnected);
    });
    socket.on("message",function(msg){
-        var message = msg;
-        message.sendTo = clientsConnected[msg.sendTo];
-        io.sockets.connected[msg.sendTo].emit("message",message);
+    var message = msg;
+    message.sendTo = clientsConnected[msg.sendTo];
+    io.sockets.connected[msg.sendTo].emit("message",message);
    });
    socket.on("locationUpdates",function(coords){
-        //update map markers on users location updates 
+    //update map markers on users location updates 
    });
    socket.on('disconnect', function () {
-        delete clientsConnected[socket.id];
+    delete clientsConnected[socket.id];
+    socket.emit("userDisconnected",clientsConnected[socket.id]);
+        
    });
 });
 
