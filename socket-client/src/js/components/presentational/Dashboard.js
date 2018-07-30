@@ -12,22 +12,41 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import Snackbar from '@material-ui/core/Snackbar';
 import Slide from '@material-ui/core/Slide';
+import Grid from '@material-ui/core/Grid';
+import { withStyles } from '@material-ui/core/styles';
+
+const styles = theme => ({
+    root: {
+      flexGrow: 1,
+    },
+    paper: {
+      padding: theme.spacing.unit * 2,
+      textAlign: 'center',
+      color: theme.palette.text.secondary,
+    },
+    formControl: {
+        minWidth: 170,
+    },
+    sendButton:{
+        marginTop:10
+    }
+});
 
 let messageList = (messages) => {
    return (
        messages.map(function(messageItem){
            return <ListItem>
-                    <ListItemText primary={messageItem.chat} secondary={<span>{messageItem.name}</span>}/>
-                </ListItem>
+                <ListItemText primary={messageItem.chat} secondary={<span>{messageItem.name}</span>}/>
+            </ListItem>
        })
    )
 };
 
 let getUserList = (users) => {
     return (
-        Object.keys(users).map(function (key) {
+        users.length ? Object.keys(users).map(function (key) {
             return <MenuItem value={key}>{key}</MenuItem>
-        })
+        }) : <MenuItem value={''}>No Online Users</MenuItem>
     )
 };
 
@@ -35,26 +54,30 @@ function TransitionLeft(props) {
     return <Slide {...props} direction="left" />;
 }
 
-const Dashboard = ({message, onMessageEntry, onUserEntry, toUser, incomingMsgModel, onMessageSend, chatErrorMsg, chatErrorToastState, onChatErrorToastClose, joinedUsers}) => (
+const Dashboard = ({message, onMessageEntry, onUserEntry, toUser, incomingMsgModel, onMessageSend, chatErrorMsg, chatErrorToastState, onChatErrorToastClose, joinedUsers, classes}) => (
     <div>
-        <TextField label="Enter Message" onChange={onMessageEntry} 
-            value={message}
-            id="messageInput"
-            margin="normal" 
-        />
-        <FormControl required>
-            <InputLabel htmlFor="age-required">Receiver Name</InputLabel>
-            <Select value={toUser} onChange={onUserEntry} name="Receiver Name"
-                inputProps={{
-                    id: 'age-required',
-                }}>
-                {getUserList(joinedUsers)}
-            </Select>
-            <FormHelperText>Required</FormHelperText>
-        </FormControl>  
-        <Button onClick={onMessageSend} variant="contained" color="primary">
-            Send Message
-        </Button>
+        <Grid container spacing={24}>
+            <Grid item xs={12} className={classes.paper}>
+                <TextField label="Enter Message" onChange={onMessageEntry} 
+                    value={message}
+                    id="messageInput"
+                    margin="normal" 
+                />
+            </Grid>
+            <Grid item xs={12} className={classes.paper}>
+                <FormControl required className={classes.formControl}>
+                    <InputLabel>Receiver Name</InputLabel>
+                    <Select value={toUser} onChange={onUserEntry} name="Receiver Name">
+                        {getUserList(joinedUsers)} 
+                    </Select>
+                </FormControl>  
+            </Grid>
+        </Grid>
+        <Grid item xs={12} className={classes.paper}>
+            <Button className={classes.sendButton} onClick={onMessageSend} variant="contained" color="primary">
+                Send Message
+            </Button>
+        </Grid>
         <List>
             {messageList(incomingMsgModel)}
         </List>
@@ -78,7 +101,8 @@ Dashboard.propTypes = {
     chatErrorMsg:PropTypes.string.isRequired,
     chatErrorToastState:PropTypes.bool.isRequired,
     onChatErrorToastClose:PropTypes.func.isRequired,
-    joinedUsers:PropTypes.object.isRequired
+    joinedUsers:PropTypes.object.isRequired,
+    classes:PropTypes.object.isRequired
 };
 
-export default Dashboard;
+export default withStyles(styles)(Dashboard);

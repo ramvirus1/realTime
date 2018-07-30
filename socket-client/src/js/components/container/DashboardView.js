@@ -7,21 +7,24 @@ import Actions from '../../configuration/Actions';
 
 class DashboardView extends React.Component{
    constructor(){
-       super();
-       this.SocketSwitch = new SocketConn();
-       this.onMessageReceive = this.onMessageReceive.bind(this);
-       this.onUserJoinEvent = this.onUserJoinEvent.bind(this);
+    super();
+    this.SocketSwitch = new SocketConn();
+    this.onMessageReceive = this.onMessageReceive.bind(this);
+    this.onUserJoinEvent = this.onUserJoinEvent.bind(this);
+    this.onDisconnect = this.onDisconnect.bind(this);
    }
-   componentDidMount(){ 
-        this.SocketSwitch.connect(this.onMessageReceive,this.onUserJoinEvent);
-        this.SocketSwitch.sendJoinEvent(this.props.location.state.loggedInUser);
-   }
-
    onMessageReceive(message){
-       this.props.updateMessageList(message);
+    this.props.updateMessageList(message);
    }
    onUserJoinEvent(users){
     this.props.updateOnlineUsers(users);
+   }
+   onDisconnect(users){
+    this.props.updateOnlineUsers(users);
+   }
+   componentDidMount(){ 
+    this.SocketSwitch.connect(this.onMessageReceive,this.onUserJoinEvent,this.onDisconnect);
+    this.SocketSwitch.sendJoinEvent(this.props.location.state.loggedInUser);
    }
    onMessageEntry(event){
     this.props.handleMessageChange(event.target.value);  
