@@ -10,7 +10,6 @@ class RegistrationView extends React.Component{
         super();
     }
     onRegistration(){
-        console.log(this.props.username);
         if(this.props.username === ""){
             this.props.toggleErrorToast(true,'Please Enter UserName');
         }else{
@@ -60,5 +59,4 @@ function mapDispatchToProps(dispatch) {
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(RegistrationView);
-ReactDOM.render(<RegistrationView />, document.getElementById("realTime"));
 

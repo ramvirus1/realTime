@@ -1,42 +1,33 @@
 import Actions from '../Actions';
 
 const initialDashboardState = {
-    enteredMessage:"",
-    toUser:"",
-    chatErrorMsg:"",
-    chatErrorToastState:false,
-    incomingMsgModel:[],
-    joinedUsers:{},
-    loggedInUser:""
+    loggedInUser:"",
+    tabIndex:0,
+    chatMessages:[],
+    userLocations:[],
+    onlineUsers:{}
 };
 
 const DashboardReducer = (state = initialDashboardState,action) => {
     switch(action.type){
-      case Actions.Dashboard.UPDATE_CURRENT_LOGIN_NAME:
+      case Actions.Dashboard.UPDATE_USER_POSITIONS:
+        let positionObject = [{name:action.payload.user,
+            coordinates:{
+                lat:action.payload.location.latitude,
+                lng:action.payload.location.longitude
+            }
+        }];
         return Object.assign({}, state, {
-            loggedInUser:action.payload.name
-        })
-      case Actions.Dashboard.UPDATE_TO_USER_SELECTION:
+            userLocations:state.userLocations.concat(positionObject)
+      })
+      case Actions.Dashboard.ON_TAB_CHANGE:
         return Object.assign({}, state, {
-            toUser:action.payload.toUser
-        })
-      case Actions.Dashboard.MESSAGE_ENTRY_CHANGE:
-        return Object.assign({}, state, {
-            enteredMessage:action.payload.message
-        })
-      case Actions.Dashboard.UPDATE_MESSAGES_LIST:
-        return Object.assign({}, state, {
-            incomingMsgModel:state.incomingMsgModel.concat(action.payload.messages)
-        })
-      case Actions.Dashboard.TOGGLE_ERROR_TOAST:
-        return Object.assign({}, state, {
-            chatErrorToastState:action.payload.state,
-            chatErrorMsg:action.payload.message
+            tabIndex:action.payload.tabIndex
         })
       case Actions.Dashboard.UPDATE_ONLINE_USERS:
         return Object.assign({}, state, {
-            joinedUsers:action.payload.userlist
-        })  
+            onlineUsers:action.payload.userlist
+        })
       default:
       return state;
     }

@@ -1,17 +1,20 @@
 import React from "react";
 import Dashboard from "../presentational/Dashboard";
-import {withRouter} from 'react-router-dom';
 import SocketConn from '../../configuration/Socket.start';
 import {connect} from 'react-redux';
 import Actions from '../../configuration/Actions';
+import Common from '../../configuration/Common';
+import {geolocated} from 'react-geolocated';
 
 class DashboardView extends React.Component{
    constructor(){
     super();
     this.SocketSwitch = new SocketConn();
+    this.CommonInstance = new Common();
     this.onMessageReceive = this.onMessageReceive.bind(this);
     this.onUserJoinEvent = this.onUserJoinEvent.bind(this);
     this.onDisconnect = this.onDisconnect.bind(this);
+    this.OnlocationSuccess = this.OnlocationSuccess.bind(this);
    }
    onMessageReceive(message){
     this.props.updateMessageList(message);
@@ -22,97 +25,64 @@ class DashboardView extends React.Component{
    onDisconnect(users){
     this.props.updateOnlineUsers(users);
    }
-   componentDidMount(){ 
+   OnlocationSuccess(position){
+      this.props.updateUserLocation(position,this.CommonInstance.getValue('currentUser'));
+   }
+   OnlocationFailed(){
+     console.log('failed');
+   }
+   componentDidMount(){
+    this.CommonInstance.setValue('currentUser',this.props.location.state.loggedInUser);
     this.SocketSwitch.connect(this.onMessageReceive,this.onUserJoinEvent,this.onDisconnect);
     this.SocketSwitch.sendJoinEvent(this.props.location.state.loggedInUser);
+    this.CommonInstance.getUserLocation(this.OnlocationSuccess,this.OnlocationFailed);
    }
-   onMessageEntry(event){
-    this.props.handleMessageChange(event.target.value);  
+   onTabChange(event,value){
+    this.props.onTabChange(value);
    }
-   onUserEntry(event){
-    this.props.onToUserSelection(event.target.value);
-   }
-   onChatErrorToastClose(){
-    this.props.toggleErrorToast(false,'');
-   }
-   onMessageSend(event){
-       if(this.props.enteredMessage === ""){
-        this.props.toggleErrorToast(true,'Please Enter Message');
-       }else if(this.props.toUser === ""){
-        this.props.toggleErrorToast(true,'Please Enter Receiver Name');
-       }else{
-        this.SocketSwitch.sendMessage(this.props.loggedInUser,this.props.enteredMessage,this.props.toUser);
-       }   
-   }
-   render(){
-       return(
-        <Dashboard message={this.props.enteredMessage} 
-            onMessageEntry={this.onMessageEntry.bind(this)} 
-            onUserEntry={this.onUserEntry.bind(this)} 
-            toUser={this.props.toUser} 
-            incomingMsgModel={this.props.incomingMsgModel} 
-            onMessageSend={this.onMessageSend.bind(this)} 
-            chatErrorMsg={this.props.chatErrorMsg} 
-            chatErrorToastState={this.props.chatErrorToastState}
-            onChatErrorToastClose={this.onChatErrorToastClose.bind(this)}
-            joinedUsers={this.props.joinedUsers}
+   render() {
+    return (
+        <Dashboard
+            onTabChange={this.onTabChange.bind(this)}
+            tabIndex={this.props.tabIndex}
+            chatMessages={this.props.chatMessages}
+            userLocations={this.props.userLocations}
+            onlineUsers={this.props.onlineUsers}
         />
-       )
+    );
    }
 }
+
 function mapStateToProps(state) {
     return({
-        enteredMessage:state.DashboardReducer.enteredMessage,
-        toUser:state.DashboardReducer.toUser,
-        chatErrorMsg:state.DashboardReducer.chatErrorMsg,
-        chatErrorToastState:state.DashboardReducer.chatErrorToastState,
-        incomingMsgModel:state.DashboardReducer.incomingMsgModel,
-        joinedUsers:state.DashboardReducer.joinedUsers,
-        loggedInUser:state.DashboardReducer.loggedInUser
+        tabIndex:state.DashboardReducer.tabIndex,
+        chatMessages:state.DashboardReducer.chatMessages,
+        userLocations:state.DashboardReducer.userLocations,
+        onlineUsers:state.DashboardReducer.onlineUsers
     })
 }
+
 function mapDispatchToProps(dispatch) {
     return({
-        updateCurrentUserName(name){
-            dispatch({type:Actions.Dashboard.UPDATE_CURRENT_LOGIN_NAME,
-                payload:{
-                    name:name
-                }
-            })
-        },
-        handleMessageChange(message){
-            dispatch({type:Actions.Dashboard.MESSAGE_ENTRY_CHANGE,
-                payload:{
-                    message:message
-                }
-            })
-        },
-        toggleErrorToast(state,errorMessage){
-            dispatch({type:Actions.Dashboard.TOGGLE_ERROR_TOAST,
-                payload:{
-                    state:state,
-                    message:errorMessage
-                }
-            })
-        },
-        onToUserSelection(toUser){
-            dispatch({type:Actions.Dashboard.UPDATE_TO_USER_SELECTION,
-                payload:{
-                  toUser:toUser
-                }
-            })
-        },
-        updateMessageList(messages){
-            dispatch({type:Actions.Dashboard.UPDATE_MESSAGES_LIST,
-                payload:{
-                   messages:messages
-                }
-            })
-        },
         updateOnlineUsers(userList){
             dispatch({type:Actions.Dashboard.UPDATE_ONLINE_USERS,
                 payload:{
                     userlist:userList
+                }
+            })
+        },
+        updateUserLocation(location,user){
+            dispatch({type:Actions.Dashboard.UPDATE_USER_POSITIONS,
+                payload:{
+                    location:location,
+                    user:user
+                }
+            })
+        },
+        onTabChange(value){
+            dispatch({type:Actions.Dashboard.ON_TAB_CHANGE,
+                payload:{
+                    tabIndex:value
                 }
             })
         }
