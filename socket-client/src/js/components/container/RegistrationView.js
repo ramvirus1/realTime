@@ -4,15 +4,21 @@ import Registration from '../presentational/Registration';
 import {withRouter} from 'react-router-dom';
 import { connect } from 'react-redux'
 import Actions from '../../configuration/Actions';
+import Common from '../../configuration/Common';
+import SocketConn from '../../configuration/Socket.start';
 
 class RegistrationView extends React.Component{
     constructor() {
         super();
+        this.CommonInstance = new Common();
     }
     onRegistration(){
         if(this.props.username === ""){
             this.props.toggleErrorToast(true,'Please Enter UserName');
         }else{
+            this.SocketSwitch = new SocketConn();
+            this.CommonInstance.saveSocketInstance(this.SocketSwitch);
+            this.CommonInstance.setValue('currentUser',this.props.username);
             this.props.history.push('/dashboard',{ loggedInUser:this.props.username});
         }
     }

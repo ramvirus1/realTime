@@ -2,17 +2,29 @@ import React from 'react';
 import {connect} from 'react-redux';
 import Actions from '../../../configuration/Actions';
 import ChatTemplate from '../../presentational/Chat';
-import SocketConn from '../../../configuration/Socket.start';
+import Common from '../../../configuration/Common';
 
 class ChatView extends React.Component{
     constructor(){
         super();
+        this.CommonInstance = new Common();
+        this.SocketInstance = this.CommonInstance.getSocketInstance();
+        this.onMessageReceive = this.onMessageReceive.bind(this);
+        this.onUserJoinEvent = this.onUserJoinEvent.bind(this);
+        this.onDisconnect = this.onDisconnect.bind(this);
+    }
+    onMessageReceive(message){
+        this.props.updateMessageList(message);
+    }
+    onUserJoinEvent(users){
+        this.props.updateOnlineUsers(users);
+       }
+    onDisconnect(users){
+        this.props.updateOnlineUsers(users);
     }
     componentDidMount(){
-        this.SocketInstance = new SocketConn();
-    }
-    componentWillReceiveProps(nextProps) {
-        this.props.updateOnlineUsers(nextProps.users);  
+        this.SocketInstance.connect(this.onMessageReceive,this.onUserJoinEvent,this.onDisconnect);
+        this.SocketInstance.sendJoinEvent(this.CommonInstance.getValue('currentUser'));
     }
     onMessageEntry(event){
         this.props.handleMessageChange(event.target.value);  
@@ -29,7 +41,7 @@ class ChatView extends React.Component{
         }else if(this.props.toUser === ""){
          this.props.toggleErrorToast(true,'Please Enter Receiver Name');
         }else{
-         this.SocketInstance.sendMessage(this.props.loggedInUser,this.props.enteredMessage,this.props.toUser);
+         this.SocketInstance.sendMessage(this.CommonInstance.getValue('currentUser'),this.props.enteredMessage,this.props.toUser);
         }   
     }
     render(){
@@ -44,7 +56,6 @@ class ChatView extends React.Component{
                 chatErrorToastState={this.props.chatErrorToastState}
                 onChatErrorToastClose={this.onChatErrorToastClose.bind(this)}
                 joinedUsers={this.props.joinedUsers}
-                socketConn={this.socketConn}
             />
         )
     }
