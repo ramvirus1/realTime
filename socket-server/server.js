@@ -10,23 +10,28 @@ app.use(bodyparser.json);
 var clientsConnected = {};
 
 io.on("connection",function(socket){
-   socket.on("join", function(name){
-    clientsConnected[name] = socket.id;
-    socket.emit("join",clientsConnected);
-   });
-   socket.on("message",function(msg){
-    var message = msg;
-    message.sendTo = clientsConnected[msg.sendTo];
-    io.sockets.connected[msg.sendTo].emit("message",message);
-   });
-   socket.on("locationUpdates",function(coords){
-    //update map markers on users location updates 
-   });
-   socket.on('disconnect', function () {
-    delete clientsConnected[socket.id];
-    socket.emit("userDisconnected",clientsConnected[socket.id]);
-        
-   });
+    socket.on("join", function(name){
+        clientsConnected[name] = socket.id;
+        socket.broadcast.emit("join",clientsConnected);
+    });
+    socket.on("message",function(msg){
+        var message = msg;
+        console.log(msg);
+        message.sendTo = clientsConnected[msg.sendTo];
+        io.sockets.connected[msg.sendTo].emit("message",message);
+    });
+    socket.on("locationUpdates",function(locationPayload){
+        locationPayload['Id'] = clientsConnected[locationPayload.name];
+        socket.broadcast.emit("locationUpdates",locationPayload);
+    });
+    socket.on('disconnect', function () {
+        delete clientsConnected[socket.id];
+        if(Object.keys(clientsConnected).length){
+            socket.broadcast.emit("userDisconnected",clientsConnected); 
+        }else{
+            socket.broadcast.emit("userDisconnected",{}); 
+        }
+    });
 });
 
 http.listen(port,function(){});
